@@ -31,6 +31,7 @@ dev = [
     "pylint>=2.13.9",
     "pytest>=7.4.4",
     "ruff>=0.15.5",
+    "mypy>=1.13",
 ]
 
 [tool.pytest.ini_options]
@@ -69,3 +70,13 @@ disable = [
     "inconsistent-return-statements",
     "too-few-public-methods",
 ]
+
+[tool.mypy]
+python_version = "3.14"
+files = ["k8s_utils"]
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
