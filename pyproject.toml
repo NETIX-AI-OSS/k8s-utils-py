@@ -7,7 +7,7 @@ name = "k8s-utils-py"
 version = "0.1.0"
 description = "Opinionated Kubernetes resource helpers for Python automation."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14,<4.0"
 keywords = ["kubernetes", "python", "automation"]
 license = {file = "LICENSE"}
 classifiers = [
