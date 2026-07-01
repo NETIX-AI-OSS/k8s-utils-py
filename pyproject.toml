@@ -25,7 +25,6 @@ include = ["k8s_utils*"]
 
 [dependency-groups]
 dev = [
-    "black>=23.3.0",
     "pre-commit>=2.21.0",
     "prospector>=1.8.3",
     "pylint>=2.13.9",
@@ -39,10 +38,6 @@ testpaths = ["tests"]
 markers = [
     "k8s: mark test as a Kubernetes integration test (requires --k8s flag)",
 ]
-
-[tool.black]
-line-length = 88
-target-version = ["py312"]
 
 [tool.ruff]
 line-length = 88
