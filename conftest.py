@@ -19,7 +19,6 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--k8s"):
-        # Only run k8s-marked tests
         selected = [item for item in items if "k8s" in item.keywords]
         deselected = [item for item in items if "k8s" not in item.keywords]
         config.hook.pytest_deselected(items=deselected)

@@ -1,5 +1,3 @@
-"""Public package exports for k8s-utils-py."""
-
 from k8s_utils.configmap import ConfigMap
 from k8s_utils.deployment import Deployment
 from k8s_utils.ingress import Ingress

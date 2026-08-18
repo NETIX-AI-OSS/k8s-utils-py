@@ -38,17 +38,14 @@ class Deployment(BaseConfig):
         volume_configmap_key=None,
         volume_configmap_path=None,
     ):
-        # create deployment object
         deployment = client.V1Deployment()
 
-        # deployment fields
         deployment.api_version = "apps/v1"
         deployment.kind = "Deployment"
         deployment.metadata = client.V1ObjectMeta(
             name=self.app_name, namespace=self.namespace, labels={"app": self.app_name}
         )
 
-        # deployment spec
         spec = client.V1DeploymentSpec(
             selector=client.V1LabelSelector(match_labels={"app": self.app_name}),
             template=client.V1PodTemplateSpec(),
@@ -56,7 +53,6 @@ class Deployment(BaseConfig):
         )
         spec.template.metadata = client.V1ObjectMeta(labels={"app": self.app_name})
 
-        # container
         container = client.V1Container(
             name=self.app_name,
             image=image,
@@ -77,7 +73,6 @@ class Deployment(BaseConfig):
                 client.V1LocalObjectReference(name=image_pull_secrets)
             ]
 
-        # mount configmap data to volume
         self.__apply_volume_mount__(
             container,
             spec,

@@ -17,14 +17,12 @@ class Service(BaseConfig):
     def __create_body__(self, port):
         service = client.V1Service()
 
-        # service fields
         service.api_version = "v1"
         service.kind = "Service"
         service.metadata = client.V1ObjectMeta(
             name=self.app_name, namespace=self.namespace
         )
 
-        # spec fields
         spec = client.V1ServiceSpec()
         spec.selector = {"app": self.app_name}
         spec.ports = [client.V1ServicePort(protocol="TCP", port=80, target_port=port)]
