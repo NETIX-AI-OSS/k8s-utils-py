@@ -25,12 +25,9 @@ class Ingress(BaseConfig):
             "nginx.ingress.kubernetes.io/enable-modsecurity": "true",
             "nginx.ingress.kubernetes.io/enable-owasp-modsecurity-crs": "true",
             "nginx.ingress.kubernetes.io/modsecurity-transaction-id": "$request_id",
-            # Example modsecurity-snippet annotation for OWASP CRS WAF rules
             "nginx.ingress.kubernetes.io/limit-connection": "60",
             "nginx.ingress.kubernetes.io/limit-rpm": "600",
-            # Redirects HTTP to HTTPS for all requests.
             "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-            # Indicates which certificate issuer is used.
             "cert-manager.io/cluster-issuer": "letsencrypt-prod",
             "nginx.ingress.kubernetes.io/proxy-body-size": "0",
             "nginx.ingress.kubernetes.io/proxy-read-timeout": "600",
