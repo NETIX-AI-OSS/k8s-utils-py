@@ -25,16 +25,7 @@ class Ingress(BaseConfig):
             "nginx.ingress.kubernetes.io/enable-modsecurity": "true",
             "nginx.ingress.kubernetes.io/enable-owasp-modsecurity-crs": "true",
             "nginx.ingress.kubernetes.io/modsecurity-transaction-id": "$request_id",
-            # "nginx.ingress.kubernetes.io/modsecurity-snippet": |
-            #   SecRuleEngine On
-            #   SecRequestBodyAccess On
-            #   SecAuditLogParts ABIJDEFHZ
-            #   SecAuditEngine RelevantOnly
-            #   SecAuditLogType Serial
-            #   SecAuditLog /dev/stdout
-            #   SecRule REQUEST_HEADERS:User-Agent \"fern-scanner\"
-            #   \"log,deny,id:107,status:403,msg:'Fern Scanner Identified'\"
-            # Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+            # Example modsecurity-snippet annotation for OWASP CRS WAF rules
             "nginx.ingress.kubernetes.io/limit-connection": "60",
             "nginx.ingress.kubernetes.io/limit-rpm": "600",
             # Redirects HTTP to HTTPS for all requests.
