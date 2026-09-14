@@ -30,4 +30,4 @@ def test_public_package_exports():
     assert Ingress.__name__ == "Ingress"
     assert Pod.__name__ == "Pod"
     assert Service.__name__ == "Service"
-    assert __version__ == "0.1.0"
+    assert __version__ == "1.0.0"

@@ -5,4 +5,4 @@ from k8s_utils.pod import Pod
 from k8s_utils.service import Service
 
 __all__ = ["ConfigMap", "Deployment", "Ingress", "Pod", "Service"]
-__version__ = "0.1.0"
+__version__ = "1.0.0"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "k8s-utils-py"
-version = "0.1.0"
+version = "1.0.0"
 description = "Opinionated Kubernetes resource helpers for Python automation."
 readme = "README.md"
 requires-python = ">=3.14,<4.0"
