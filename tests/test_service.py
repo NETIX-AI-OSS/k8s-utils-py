@@ -1,5 +1,5 @@
 import pytest
-from kubernetes.client import ApiException
+from kubernetes.client import ApiClient, ApiException
 
 from tests.conftest import make_api_exception
 
@@ -34,6 +34,19 @@ class TestServiceCreateBody:
         call_kwargs = mock_core_api.create_namespaced_service.call_args.kwargs
         body = call_kwargs["body"]
         assert body.spec.selector == {"app": "test-svc"}
+
+    def test_create_body_serializes_to_the_v1_0_manifest(self, service):
+        assert ApiClient().sanitize_for_serialization(
+            service.__create_body__(port=8080)
+        ) == {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {"name": "test-svc", "namespace": "test-ns"},
+            "spec": {
+                "ports": [{"port": 80, "protocol": "TCP", "targetPort": 8080}],
+                "selector": {"app": "test-svc"},
+            },
+        }
 
 
 class TestServiceApiCalls:

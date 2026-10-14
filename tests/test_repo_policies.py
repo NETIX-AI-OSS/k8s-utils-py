@@ -1,4 +1,8 @@
+import os
 from pathlib import Path
+
+import kubernetes
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,4 +34,11 @@ def test_public_package_exports():
     assert Ingress.__name__ == "Ingress"
     assert Pod.__name__ == "Pod"
     assert Service.__name__ == "Service"
-    assert __version__ == "1.0.0"
+    assert __version__ == "1.1.0"
+
+
+def test_installed_kubernetes_matches_ci_matrix():
+    expected_major = os.environ.get("K8S_CLIENT_MAJOR")
+    if not expected_major:
+        pytest.skip("K8S_CLIENT_MAJOR is only set by the CI matrix")
+    assert kubernetes.__version__.split(".")[0] == expected_major

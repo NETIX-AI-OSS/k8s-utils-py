@@ -38,20 +38,14 @@ class Deployment(BaseConfig):
         volume_configmap_key=None,
         volume_configmap_path=None,
     ):
-        deployment = client.V1Deployment()
-
-        deployment.api_version = "apps/v1"
-        deployment.kind = "Deployment"
-        deployment.metadata = client.V1ObjectMeta(
-            name=self.app_name, namespace=self.namespace, labels={"app": self.app_name}
+        # kubernetes>=37 models validate required fields, so build each one whole.
+        volume_mounts, volumes = self.__create_volume__(
+            volume_name,
+            volume_mount_path,
+            volume_configmap_name,
+            volume_configmap_key,
+            volume_configmap_path,
         )
-
-        spec = client.V1DeploymentSpec(
-            selector=client.V1LabelSelector(match_labels={"app": self.app_name}),
-            template=client.V1PodTemplateSpec(),
-            replicas=replicas,
-        )
-        spec.template.metadata = client.V1ObjectMeta(labels={"app": self.app_name})
 
         container = client.V1Container(
             name=self.app_name,
@@ -62,34 +56,38 @@ class Deployment(BaseConfig):
             command=command,
             env=self.__create_env__(env_vars if env_vars is not None else {}),
             env_from=self.__env_from_arr__,
+            volume_mounts=volume_mounts,
             # ports=[client.V1ContainerPort(container_port=port)]
         )
 
-        spec.template.spec = client.V1PodSpec(
-            containers=[container],
+        return client.V1Deployment(
+            api_version="apps/v1",
+            kind="Deployment",
+            metadata=client.V1ObjectMeta(
+                name=self.app_name,
+                namespace=self.namespace,
+                labels={"app": self.app_name},
+            ),
+            spec=client.V1DeploymentSpec(
+                selector=client.V1LabelSelector(match_labels={"app": self.app_name}),
+                template=client.V1PodTemplateSpec(
+                    metadata=client.V1ObjectMeta(labels={"app": self.app_name}),
+                    spec=client.V1PodSpec(
+                        containers=[container],
+                        image_pull_secrets=(
+                            [client.V1LocalObjectReference(name=image_pull_secrets)]
+                            if image_pull_secrets
+                            else None
+                        ),
+                        volumes=volumes,
+                    ),
+                ),
+                replicas=replicas,
+            ),
         )
-        if image_pull_secrets:
-            spec.template.spec.image_pull_secrets = [
-                client.V1LocalObjectReference(name=image_pull_secrets)
-            ]
 
-        self.__apply_volume_mount__(
-            container,
-            spec,
-            volume_name,
-            volume_mount_path,
-            volume_configmap_name,
-            volume_configmap_key,
-            volume_configmap_path,
-        )
-
-        deployment.spec = spec
-        return deployment
-
-    def __apply_volume_mount__(
+    def __create_volume__(
         self,
-        container,
-        spec,
         volume_name,
         volume_mount_path,
         volume_configmap_name,
@@ -103,21 +101,24 @@ class Deployment(BaseConfig):
             and volume_configmap_key
             and volume_configmap_path
         ):
-            return
-        container.volume_mounts = [
-            {"mountPath": volume_mount_path, "name": volume_name}
+            return None, None
+        volume_mounts = [
+            client.V1VolumeMount(mount_path=volume_mount_path, name=volume_name)
         ]
-        spec.template.spec.volumes = [
+        volumes = [
             client.V1Volume(
                 name=volume_name,
                 config_map=client.V1ConfigMapVolumeSource(
                     name=volume_configmap_name,
                     items=[
-                        {"key": volume_configmap_key, "path": volume_configmap_path}
+                        client.V1KeyToPath(
+                            key=volume_configmap_key, path=volume_configmap_path
+                        )
                     ],
                 ),
             )
         ]
+        return volume_mounts, volumes
 
     def add_env_from(self, configmap_name):
         self.__env_from_arr__.append(
