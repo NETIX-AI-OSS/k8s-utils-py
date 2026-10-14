@@ -26,8 +26,7 @@ class ConfigMap(BaseConfig):
         return {
             "apiVersion": "v1",
             "kind": "ConfigMap",
-            "namespace": self.namespace,
-            "metadata": {"name": self.name},
+            "metadata": {"name": self.name, "namespace": self.namespace},
             "data": data,
         }
 

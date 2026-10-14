@@ -10,6 +10,21 @@ This project uses two-component release tags (`v1.0`) and three-component packag
 
 ## Unreleased
 
+## 1.2.0 — 2026-10-14 (tag `v1.2`)
+
+### Fixed
+
+- `ConfigMap.create` works with kubernetes 37. The body carried a top-level `namespace`
+  key, which is not a ConfigMap field. kubernetes 37 validates request bodies
+  (`extra="forbid"`) and rejected it, while older clients sent it and the API server
+  ignored it. The namespace now sits in `metadata`, where Kubernetes defines it. 1.1.0
+  missed this because its tests mocked the API classes.
+
+### Changed
+
+- Every helper is now also tested through the real kubernetes API classes, with only the
+  HTTP pool stubbed, so client-side request validation and error mapping run on 36 and 37.
+
 ## 1.1.0 — 2026-10-14 (tag `v1.1`)
 
 ### Fixed

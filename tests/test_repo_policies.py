@@ -34,7 +34,7 @@ def test_public_package_exports():
     assert Ingress.__name__ == "Ingress"
     assert Pod.__name__ == "Pod"
     assert Service.__name__ == "Service"
-    assert __version__ == "1.1.0"
+    assert __version__ == "1.2.0"
 
 
 def test_installed_kubernetes_matches_ci_matrix():

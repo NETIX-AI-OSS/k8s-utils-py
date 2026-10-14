@@ -57,8 +57,8 @@ class TestConfigMapCreate:
         body = call_kwargs["body"]
         assert body["apiVersion"] == "v1"
         assert body["kind"] == "ConfigMap"
-        assert body["metadata"]["name"] == "test-cm"
-        assert body["namespace"] == "test-ns"
+        assert body["metadata"] == {"name": "test-cm", "namespace": "test-ns"}
+        assert "namespace" not in body
         assert body["data"] == {"app.conf": "data=1"}
 
     def test_create_keeps_old_inline_behavior_by_default(
