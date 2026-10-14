@@ -15,18 +15,15 @@ class Service(BaseConfig):
         super().__init__(sa_enabled, config_file)
 
     def __create_body__(self, port):
-        service = client.V1Service()
-
-        service.api_version = "v1"
-        service.kind = "Service"
-        service.metadata = client.V1ObjectMeta(
-            name=self.app_name, namespace=self.namespace
+        service = client.V1Service(
+            api_version="v1",
+            kind="Service",
+            metadata=client.V1ObjectMeta(name=self.app_name, namespace=self.namespace),
+            spec=client.V1ServiceSpec(
+                selector={"app": self.app_name},
+                ports=[client.V1ServicePort(protocol="TCP", port=80, target_port=port)],
+            ),
         )
-
-        spec = client.V1ServiceSpec()
-        spec.selector = {"app": self.app_name}
-        spec.ports = [client.V1ServicePort(protocol="TCP", port=80, target_port=port)]
-        service.spec = spec
         logger.info("Service body created.")
         return service
 

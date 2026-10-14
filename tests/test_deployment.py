@@ -1,5 +1,5 @@
 import pytest
-from kubernetes.client import ApiException
+from kubernetes.client import ApiClient, ApiException, V1ResourceRequirements
 
 from tests.conftest import make_api_exception
 
@@ -134,14 +134,14 @@ class TestCreateBody:
             volume_configmap_path="app.conf",
         )
         container = body.spec.template.spec.containers[0]
-        assert container.volume_mounts[0]["name"] == "data-vol"
-        assert container.volume_mounts[0]["mountPath"] == "/etc/config"
+        assert container.volume_mounts[0].name == "data-vol"
+        assert container.volume_mounts[0].mount_path == "/etc/config"
 
         vol = body.spec.template.spec.volumes[0]
         assert vol.name == "data-vol"
         assert vol.config_map.name == "my-cm"
-        assert vol.config_map.items[0]["key"] == "app.conf"
-        assert vol.config_map.items[0]["path"] == "app.conf"
+        assert vol.config_map.items[0].key == "app.conf"
+        assert vol.config_map.items[0].path == "app.conf"
 
     @pytest.mark.parametrize(
         "missing_param",
@@ -168,6 +168,119 @@ class TestCreateBody:
         container = body.spec.template.spec.containers[0]
         assert container.volume_mounts is None
         assert body.spec.template.spec.volumes is None
+
+
+class TestCreateBodyWireFormat:
+    def test_full_body_serializes_to_the_v1_0_manifest(self, deployment):
+        deployment.add_env_from("my-cm")
+        body = deployment.__create_body__(
+            image="nginx:latest",
+            command=["/bin/sh"],
+            image_pull_secrets="regcred",
+            image_pull_policy="Always",
+            env_vars={"FOO": "bar"},
+            replicas=2,
+            volume_name="data-vol",
+            volume_mount_path="/etc/config",
+            volume_configmap_name="my-cm",
+            volume_configmap_key="app.conf",
+            volume_configmap_path="app.conf",
+        )
+        assert ApiClient().sanitize_for_serialization(body) == {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "labels": {"app": "test-app"},
+                "name": "test-app",
+                "namespace": "test-ns",
+            },
+            "spec": {
+                "replicas": 2,
+                "selector": {"matchLabels": {"app": "test-app"}},
+                "template": {
+                    "metadata": {"labels": {"app": "test-app"}},
+                    "spec": {
+                        "containers": [
+                            {
+                                "command": ["/bin/sh"],
+                                "env": [{"name": "FOO", "value": "bar"}],
+                                "envFrom": [{"configMapRef": {"name": "my-cm"}}],
+                                "image": "nginx:latest",
+                                "imagePullPolicy": "Always",
+                                "name": "test-app",
+                                "volumeMounts": [
+                                    {"mountPath": "/etc/config", "name": "data-vol"}
+                                ],
+                            }
+                        ],
+                        "imagePullSecrets": [{"name": "regcred"}],
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "items": [{"key": "app.conf", "path": "app.conf"}],
+                                    "name": "my-cm",
+                                },
+                                "name": "data-vol",
+                            }
+                        ],
+                    },
+                },
+            },
+        }
+
+    def test_minimal_body_serializes_to_the_v1_0_manifest(self, deployment):
+        body = deployment.__create_body__(
+            image="nginx",
+            command=["/bin/sh"],
+            image_pull_secrets=None,
+            image_pull_policy=None,
+            env_vars=None,
+        )
+        assert ApiClient().sanitize_for_serialization(body) == {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "labels": {"app": "test-app"},
+                "name": "test-app",
+                "namespace": "test-ns",
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {"matchLabels": {"app": "test-app"}},
+                "template": {
+                    "metadata": {"labels": {"app": "test-app"}},
+                    "spec": {
+                        "containers": [
+                            {
+                                "command": ["/bin/sh"],
+                                "env": [],
+                                "envFrom": [],
+                                "image": "nginx",
+                                "imagePullPolicy": "",
+                                "name": "test-app",
+                            }
+                        ]
+                    },
+                },
+            },
+        }
+
+    def test_body_stays_mutable_for_callers_that_stamp_extra_fields(self, deployment):
+        body = deployment.__create_body__(
+            image="nginx",
+            command=["/bin/sh"],
+            image_pull_secrets=None,
+            image_pull_policy=None,
+            env_vars=None,
+        )
+        body.spec.template.metadata.annotations = {"rev": "2"}
+        body.spec.template.spec.containers[0].resources = V1ResourceRequirements(
+            requests={"cpu": "50m"}
+        )
+        wire = ApiClient().sanitize_for_serialization(body)
+        assert wire["spec"]["template"]["metadata"]["annotations"] == {"rev": "2"}
+        container = wire["spec"]["template"]["spec"]["containers"][0]
+        assert container["resources"] == {"requests": {"cpu": "50m"}}
 
 
 class TestDeploymentApiCalls:
